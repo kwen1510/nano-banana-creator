@@ -1,0 +1,3469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini Nano-Banana Image Generator</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Custom scrollbar styles */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        ::-webkit-scrollbar-corner {
+            background: transparent;
+        }
+
+        /* Firefox scrollbar */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            background: #f8f9fa;
+            min-height: 100vh;
+            margin: 0;
+            padding: 16px;
+            color: #1a1a1a;
+        }
+
+        .container {
+            max-width: 1600px;
+            height: calc(100vh - 32px);
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #e9ecef;
+        }
+
+        .header {
+            background: white;
+            color: #1a1a1a;
+            padding: 24px 32px;
+            border-bottom: 1px solid #e9ecef;
+            position: relative;
+        }
+
+        .header-controls {
+            position: absolute;
+            top: 24px;
+            right: 32px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-btn {
+            background: #f8f9fa;
+            color: #333;
+            border: 1px solid #e1e5e9;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .header-btn:hover {
+            background: #e9ecef;
+            border-color: #ced4da;
+        }
+
+        .gallery-header-btn {
+            background: #333;
+            color: white;
+            border-color: #333;
+        }
+
+        .gallery-header-btn:hover {
+            background: #555;
+            border-color: #555;
+        }
+
+        .api-key-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .api-key-btn {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            color: #495057;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .api-key-btn:hover {
+            background: #e9ecef;
+            border-color: #dee2e6;
+        }
+
+        .api-status {
+            font-size: 12px;
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        .session-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: #6c757d;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 40px;
+            height: 20px;
+            background: #dadce0;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .toggle-switch.active {
+            background: #10a37f;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 16px;
+            height: 16px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+
+        .toggle-switch.active .toggle-slider {
+            transform: translateX(20px);
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #1a1a1a;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: #6c757d;
+            font-weight: 400;
+        }
+
+        .main-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .canvas-area {
+            flex: 1;
+            background: #fafafa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            border-right: 1px solid #e9ecef;
+        }
+
+        .canvas-placeholder {
+            text-align: center;
+            color: #adb5bd;
+            font-size: 16px;
+            padding: 48px;
+            font-weight: 400;
+        }
+
+        .canvas-image {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 8px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+        }
+
+        .canvas-controls {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            display: flex;
+            gap: 8px;
+            z-index: 15;
+        }
+
+        .canvas-btn {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #e9ecef;
+            color: #495057;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            backdrop-filter: blur(10px);
+            font-size: 14px;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .canvas-btn:hover {
+            background: #f8f9fa;
+            border-color: #dee2e6;
+        }
+
+        .canvas-btn.active {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        .canvas-btn.active:hover {
+            background: #0056b3;
+            border-color: #0056b3;
+        }
+
+        .drawing-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            cursor: crosshair;
+            z-index: 5;
+            display: none;
+            pointer-events: auto;
+        }
+
+        .canvas-area.drawing-mode {
+            cursor: crosshair;
+        }
+
+        .drawing-btn {
+            background: rgba(255, 87, 34, 0.9) !important;
+            color: white !important;
+            border-color: #ff5722 !important;
+        }
+
+        .drawing-btn:hover {
+            background: #ff5722 !important;
+            border-color: #e64a19 !important;
+            color: white !important;
+        }
+
+        .new-canvas-btn {
+            background: #667eea !important;
+            color: white !important;
+            border-color: #667eea !important;
+        }
+
+        .new-canvas-btn:hover {
+            background: #5a67d8 !important;
+            border-color: #5a67d8 !important;
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            pointer-events: none;
+        }
+
+        .toast {
+            background: white;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+            border-left: 4px solid #28a745;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 250px;
+            animation: toastSlideIn 0.3s ease-out;
+            pointer-events: auto;
+        }
+
+        .toast.error {
+            border-left-color: #dc3545;
+        }
+
+        .toast-content {
+            flex: 1;
+            font-size: 14px;
+            color: #495057;
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            color: #6c757d;
+            cursor: pointer;
+            padding: 4px;
+            line-height: 1;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .toast-close:hover {
+            color: #495057;
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        @keyframes toastSlideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes toastSlideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+
+        .chat-area {
+            width: 480px;
+            display: flex;
+            flex-direction: column;
+            background: white;
+        }
+
+        .chat-header {
+            padding: 24px;
+            border-bottom: 1px solid #e9ecef;
+            background: white;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 24px;
+            padding-right: 20px;
+            margin-right: 4px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .message {
+            display: flex;
+            gap: 12px;
+            animation: slideIn 0.2s ease-out;
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            flex-shrink: 0;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .message.user .message-avatar {
+            background: #1a1a1a;
+            color: white;
+        }
+
+        .message.ai .message-avatar {
+            background: #f1f3f4;
+            color: #5f6368;
+            border: none;
+            background-image: url('ai.png');
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+            font-size: 0;
+        }
+
+        .message.ai .message-avatar.fallback {
+            background-image: none;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .message.ai .message-avatar.fallback::before {
+            content: "🎨";
+            font-size: 16px;
+        }
+
+        .message-content {
+            max-width: 80%;
+            padding: 14px 18px;
+            border-radius: 18px;
+            position: relative;
+            font-size: 14px;
+            line-height: 1.45;
+        }
+
+        .message.user .message-content {
+            background: #1a1a1a;
+            color: white;
+            border-radius: 18px 18px 4px 18px;
+        }
+
+        .message.ai .message-content {
+            background: #f1f3f4;
+            color: #202124;
+            border: none;
+            border-radius: 18px 18px 18px 4px;
+        }
+
+        .message-time {
+            font-size: 11px;
+            color: #adb5bd;
+            margin-top: 4px;
+            font-weight: 400;
+        }
+
+        .chat-input-area {
+            padding: 24px;
+            border-top: 1px solid #e9ecef;
+            background: white;
+        }
+
+        .chat-input-container {
+            display: flex;
+            gap: 8px;
+            align-items: flex-end;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 14px 18px;
+            border: 1px solid #dadce0;
+            border-radius: 24px;
+            resize: none;
+            max-height: 120px;
+            min-height: 48px;
+            font-family: inherit;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            background: #fff;
+            line-height: 1.4;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: #10a37f;
+            box-shadow: 0 0 0 1px #10a37f;
+        }
+
+        .chat-input::placeholder {
+            color: #9aa0a6;
+        }
+
+        .chat-send-btn {
+            background: #10a37f;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 24px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            height: 48px;
+        }
+
+        .chat-send-btn:hover:not(:disabled) {
+            background: #0d8a6b;
+            box-shadow: 0 2px 8px rgba(16, 163, 127, 0.24);
+        }
+
+        .chat-send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: #dadce0;
+            color: #9aa0a6;
+        }
+
+        .image-upload-btn {
+            background: #fff;
+            color: #5f6368;
+            border: 1px solid #dadce0;
+            padding: 8px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 300;
+        }
+
+        .image-upload-btn:hover {
+            background: #f8f9fa;
+            border-color: #dadce0;
+        }
+
+        .magic-prompt-btn {
+            background: #fff;
+            color: #5f6368;
+            border: 1px solid #dadce0;
+            padding: 8px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 300;
+        }
+
+        .magic-prompt-btn:hover {
+            background: #f8f9fa;
+            border-color: #dadce0;
+        }
+
+
+        .image-upload-btn.has-image {
+            background: #10a37f;
+            color: white;
+            border-color: #10a37f;
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 14px 18px;
+            background: #f1f3f4;
+            border: none;
+            border-radius: 18px 18px 18px 4px;
+            max-width: 80%;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .typing-indicator.show {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .typing-text {
+            color: #5f6368;
+            font-size: 14px;
+            font-style: italic;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 2px;
+        }
+
+        .typing-dot {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: #9aa0a6;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(1) {
+            animation-delay: 0s;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+                opacity: 0.4;
+            }
+            30% {
+                transform: translateY(-4px);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        input[type="text"]:focus, textarea:focus {
+            outline: none;
+            border-color: #ff6b6b;
+            box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .file-upload {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input {
+            width: 100%;
+            padding: 20px;
+            border: 2px dashed #ddd;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #fafafa;
+        }
+
+        .file-input:hover {
+            border-color: #ff6b6b;
+            background: #fff5f5;
+        }
+
+        .file-input input[type="file"] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .generate-btn {
+            background: linear-gradient(45deg, #ff6b6b, #feca57);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .generate-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255, 107, 107, 0.3);
+        }
+
+        .generate-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .result-section {
+            margin-top: 40px;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            display: none;
+        }
+
+        .result-section.show {
+            display: block;
+        }
+
+        .result-image {
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .download-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .download-btn:hover {
+            background: #218838;
+            transform: translateY(-1px);
+        }
+
+        /* Magic Prompt Modal Styles */
+        .magic-modal .modal-body {
+            padding: 32px;
+        }
+
+        .magic-step {
+            padding: 20px 0;
+        }
+
+        .magic-step h3 {
+            margin: 0 0 16px 0;
+            color: #333;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .magic-step textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e1e5e9;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+            transition: border-color 0.2s ease;
+            margin-bottom: 16px;
+            min-height: 80px;
+        }
+
+        .magic-step textarea:focus {
+            outline: none;
+            border-color: #666;
+        }
+
+        .magic-btn {
+            background: #333;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background-color 0.2s ease;
+        }
+
+        .magic-btn:hover {
+            background: #555;
+        }
+
+        .magic-btn.secondary {
+            background: #f8f9fa;
+            color: #333;
+            border: 1px solid #e1e5e9;
+        }
+
+        .magic-btn.secondary:hover {
+            background: #e9ecef;
+        }
+
+        .magic-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 16px;
+        }
+
+        .loading-spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #666;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 12px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+
+        /* Magic Questions Interface */
+        .question-item {
+            margin-bottom: 16px;
+            padding: 16px;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            background: #ffffff;
+        }
+
+        .question-text {
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .question-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e1e5e9;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.2s ease;
+            background: #ffffff;
+        }
+
+        .question-input:focus {
+            outline: none;
+            border-color: #666;
+        }
+
+        .enhanced-prompt-display {
+            background: #f8f9fa;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+            font-size: 14px;
+            line-height: 1.5;
+            color: #333;
+            white-space: pre-wrap;
+        }
+
+        /* Gallery Modal Styles */
+
+        .gallery-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 32px;
+            border-bottom: 1px solid #e1e5e9;
+            flex-shrink: 0;
+            background: white;
+            border-radius: 12px 12px 0 0;
+            position: relative;
+        }
+
+        .gallery-title {
+            font-size: 28px;
+            font-weight: 600;
+            color: #333;
+            margin: 0;
+        }
+
+        .gallery-header-actions {
+            display: flex;
+            gap: 16px;
+            margin-right: 60px; /* Space for close button */
+        }
+
+        .gallery-action-btn {
+            background: #333;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .gallery-action-btn:hover {
+            background: #555;
+        }
+
+        .gallery-action-btn.secondary {
+            background: #f8f9fa;
+            color: #333;
+            border: 1px solid #e1e5e9;
+        }
+
+        .gallery-action-btn.secondary:hover {
+            background: #e9ecef;
+        }
+
+        .modal-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0;
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 24px;
+            padding: 24px 32px 32px 32px;
+            min-height: 100%;
+        }
+
+        .gallery-item {
+            background: #fff;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .gallery-item:hover {
+            border-color: #333;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .gallery-item-image {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            background: #f8f9fa;
+        }
+
+        .gallery-item-info {
+            padding: 20px;
+        }
+
+        .gallery-item-prompt {
+            font-size: 14px;
+            color: #555;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            font-weight: 500;
+            margin-bottom: 12px;
+        }
+
+        .gallery-item-date {
+            font-size: 12px;
+            color: #888;
+            font-weight: 400;
+        }
+
+        .gallery-empty {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 120px 40px;
+            color: #666;
+        }
+
+        .gallery-empty h3 {
+            font-size: 24px;
+            margin: 16px 0;
+            color: #555;
+            font-weight: 600;
+        }
+
+        .gallery-empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .gallery-empty-subtitle {
+            font-size: 16px;
+            color: #888;
+            margin-top: 8px;
+            line-height: 1.5;
+        }
+
+        /* Image Detail Modal Styles */
+        .image-detail-modal {
+            max-width: 800px;
+            width: 95%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .image-detail-content {
+            display: flex;
+            gap: 24px;
+            align-items: flex-start;
+        }
+
+        .image-detail-preview {
+            flex: 1;
+            max-width: 400px;
+        }
+
+        .image-detail-preview img {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            border: 1px solid #e1e5e9;
+        }
+
+        .image-detail-info {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .detail-section {
+            margin-bottom: 20px;
+        }
+
+        .detail-section h3 {
+            margin: 0 0 8px 0;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .detail-prompt {
+            background: #f8f9fa;
+            border: 1px solid #e1e5e9;
+            border-radius: 6px;
+            padding: 12px;
+            font-size: 13px;
+            line-height: 1.4;
+            color: #333;
+        }
+
+        .detail-timestamp {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .detail-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 24px;
+        }
+
+        .detail-btn {
+            background: #333;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: background-color 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .detail-btn:hover {
+            background: #555;
+        }
+
+        .detail-btn.secondary {
+            background: #f8f9fa;
+            color: #333;
+            border: 1px solid #e1e5e9;
+        }
+
+        .detail-btn.secondary:hover {
+            background: #e9ecef;
+        }
+
+        @media (max-width: 768px) {
+            .modal-content.gallery-modal,
+            .modal-content.magic-modal {
+                width: 95vw;
+                height: 95vh;
+                margin: 2.5vh auto;
+            }
+
+            .gallery-header {
+                padding: 16px 20px;
+            }
+
+            .gallery-title {
+                font-size: 24px;
+            }
+
+            .gallery-action-btn {
+                padding: 10px 16px;
+                font-size: 13px;
+            }
+
+            .gallery-grid {
+                grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+                gap: 16px;
+                padding: 16px 20px 24px 20px;
+            }
+
+            .gallery-item-image {
+                height: 120px;
+            }
+
+            .image-detail-content {
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .magic-modal .modal-body {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .modal-content.gallery-modal,
+            .modal-content.magic-modal {
+                width: 98vw;
+                height: 98vh;
+                margin: 1vh auto;
+                border-radius: 8px;
+            }
+
+            .gallery-header {
+                padding: 12px 16px;
+                flex-direction: column;
+                gap: 16px;
+                align-items: stretch;
+            }
+
+            .gallery-title {
+                font-size: 20px;
+                text-align: center;
+            }
+
+            .gallery-header-actions {
+                justify-content: center;
+            }
+
+            .gallery-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                gap: 12px;
+                padding: 12px 16px 20px 16px;
+            }
+
+            .magic-modal .modal-body {
+                padding: 16px;
+            }
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            display: none;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #ff6b6b;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 1px solid #f5c6cb;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+        }
+
+        /* 90% screen modal overrides */
+        .modal-content.gallery-modal,
+        .modal-content.magic-modal {
+            margin: 5vh auto;
+            width: 90vw;
+            height: 90vh;
+            max-width: none;
+            max-height: 90vh;
+            border-radius: 12px;
+            padding: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .close {
+            color: #666;
+            font-size: 32px;
+            font-weight: bold;
+            cursor: pointer;
+            position: absolute;
+            right: 24px;
+            top: 20px;
+            z-index: 10;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+        }
+
+        .close:hover {
+            color: #333;
+            background: #f0f0f0;
+        }
+
+        .modal input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .save-btn {
+            background: #28a745;
+            color: white;
+        }
+
+        .clear-btn {
+            background: #dc3545;
+            color: white;
+        }
+
+        .cancel-btn {
+            background: #6c757d;
+            color: white;
+        }
+
+        .uploaded-image {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 10px;
+            margin: 10px 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+    
+    <div class="container">
+        <div class="header">
+            <div class="header-controls">
+                <div class="session-toggle" style="display: none;">
+                    <span>Remember session</span>
+                    <div class="toggle-switch" id="sessionToggle" onclick="toggleSessionPersistence()">
+                        <div class="toggle-slider"></div>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <!-- <button class="header-btn gallery-header-btn" onclick="openGalleryModal()">Gallery</button> -->
+                    <div class="api-key-section">
+                        <button class="api-key-btn" onclick="openApiKeyModal()">
+                            API Key
+                        </button>
+                        <div class="api-status" id="apiStatus">Not set</div>
+                    </div>
+                </div>
+            </div>
+            <h1>Nano-Banana</h1>
+            <p class="subtitle">AI Image Generation</p>
+        </div>
+
+        <div class="main-content">
+            <div class="canvas-area">
+                <div class="canvas-placeholder" id="canvasPlaceholder">
+                    <h3 style="margin-bottom: 8px; font-weight: 500;">Generated Images</h3>
+                    <p>Start a conversation to create images</p>
+                </div>
+                <img id="canvasImage" class="canvas-image" style="display: none;" alt="Generated image">
+                <canvas id="drawingCanvas" class="drawing-canvas"></canvas>
+                <div class="canvas-controls" id="canvasControls" style="display: none;">
+                    <button class="canvas-btn" id="penTool" onclick="togglePenTool()" title="Draw on image">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 19l7-7 3 3-7 7-3-3z"></path>
+                            <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
+                            <path d="M2 2l7.586 7.586"></path>
+                            <circle cx="11" cy="11" r="2"></circle>
+                        </svg>
+                    </button>
+                    <button class="canvas-btn" onclick="downloadCurrentImage()" title="Download image">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7,10 12,15 17,10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                    </button>
+                    <button class="canvas-btn drawing-btn" id="undoStroke" onclick="undoLastStroke()" title="Undo last stroke" style="display: none;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 7v6h6"></path>
+                            <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"></path>
+                        </svg>
+                    </button>
+                    <button class="canvas-btn drawing-btn" id="redoStroke" onclick="redoLastStroke()" title="Redo last stroke" style="display: none;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 7v6h-6"></path>
+                            <path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"></path>
+                        </svg>
+                    </button>
+                    <button class="canvas-btn drawing-btn" id="clearDrawing" onclick="clearDrawingOnly()" title="Clear all drawings" style="display: none;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 5H9l-7 7 7 7h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2Z"></path>
+                            <line x1="18" y1="9" x2="12" y2="15"></line>
+                            <line x1="12" y1="9" x2="18" y2="15"></line>
+                        </svg>
+                    </button>
+                    <button class="canvas-btn" onclick="clearCanvas()" title="Clear canvas">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="3,6 5,6 21,6"></polyline>
+                            <path d="m19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"></path>
+                            <line x1="10" y1="11" x2="10" y2="17"></line>
+                            <line x1="14" y1="11" x2="14" y2="17"></line>
+                        </svg>
+                    </button>
+                    <button class="canvas-btn new-canvas-btn" onclick="newCanvas()" title="New canvas (clear context)">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                            <polyline points="21,15 16,10 5,21"></polyline>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="chat-area">
+                <div class="chat-header">
+                    <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 2px;">Assistant</h3>
+                    <p style="font-size: 13px; color: #6c757d;">Generate and edit images with AI</p>
+                </div>
+
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message ai">
+                        <div class="message-avatar">AI</div>
+                        <div class="message-content">
+                            <div>Hello! I can help you generate and edit images. Try:</div>
+                            <div style="margin: 8px 0; font-size: 13px; color: #6c757d;">
+                                • "Create a sunset over mountains"<br>
+                                • "Generate a minimalist logo design"<br>
+                                • Upload an image to edit it
+                            </div>
+                            <div class="message-time">Now</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Typing indicator will be inserted dynamically -->
+
+                <div class="chat-input-area">
+                    <div class="chat-input-container">
+                        <button class="image-upload-btn" id="imageUploadBtn" onclick="triggerImageUpload()" title="Attach image">
+                            +
+                            <input type="file" id="chatImageUpload" accept="image/*" style="display: none;" onchange="handleChatImageUpload(event)">
+                        </button>
+                        <button class="magic-prompt-btn" id="magicPromptBtn" onclick="openMagicPromptModal()" title="Expand your prompt">🪄</button>
+                        <textarea 
+                            class="chat-input" 
+                            id="chatInput" 
+                            placeholder="Describe what you want to create..."
+                            onkeydown="handleChatKeyPress(event)"
+                        ></textarea>
+                        <button class="chat-send-btn" id="chatSendBtn" onclick="sendChatMessage()">Send</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- API Key Modal -->
+    <div id="apiKeyModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeApiKeyModal()">&times;</span>
+            <h2>API Key Management</h2>
+            <p>Enter your Gemini API key to use the image generation service:</p>
+            <input type="password" id="apiKeyInput" placeholder="Your Gemini API Key">
+            <div class="modal-buttons">
+                <button class="modal-btn save-btn" onclick="saveApiKey()">Save Key</button>
+                <button class="modal-btn clear-btn" onclick="clearApiKey()">Clear Key</button>
+                <button class="modal-btn cancel-btn" onclick="closeApiKeyModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Magic Prompt Modal -->
+    <div id="magicPromptModal" class="modal" style="display: none;">
+        <div class="modal-content magic-modal">
+            <div class="gallery-header">
+                <h2 class="gallery-title">Level Up Your Prompt</h2>
+                <span class="close" onclick="closeMagicPromptModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="magicStep1" class="magic-step">
+                    <h3>What would you like to create?</h3>
+                    <textarea id="initialPrompt" placeholder="Describe your initial idea..." rows="3" onkeydown="handleInitialPromptKeydown(event)"></textarea>
+                    <button class="magic-btn" onclick="getQuestions()">Get Questions</button>
+                </div>
+                
+                <div id="magicStep2" class="magic-step" style="display: none;">
+                    <div id="questionsList"></div>
+                    <div class="magic-buttons">
+                        <button class="magic-btn" onclick="generatePrompt()">Generate Enhanced Prompt</button>
+                    </div>
+                </div>
+                
+                <div id="magicStep3" class="magic-step" style="display: none;">
+                    <h3>Your Enhanced Prompt</h3>
+                    <div id="enhancedPromptDisplay" class="enhanced-prompt-display"></div>
+                    <div class="magic-buttons">
+                        <button class="magic-btn secondary" onclick="closeMagicPromptModal()">Cancel</button>
+                        <button class="magic-btn" onclick="useEnhancedPrompt()">Use This Prompt</button>
+                    </div>
+                </div>
+                
+                <div id="magicLoading" class="magic-step" style="display: none;">
+                    <div class="loading-spinner"></div>
+                    <p>Processing...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gallery Modal - DISABLED (will implement with database backend) -->
+    <!-- <div id="galleryModal" class="modal" style="display: none;">
+        <div class="modal-content gallery-modal">
+            <div class="gallery-header">
+                <h2 class="gallery-title">Image Gallery</h2>
+                <div class="gallery-header-actions">
+                    <button class="gallery-action-btn" onclick="downloadAllImages()" title="Download all images">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7,10 12,15 17,10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Download All
+                    </button>
+                    <button class="gallery-action-btn secondary" onclick="clearGallery()" title="Clear gallery">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="3,6 5,6 21,6"></polyline>
+                            <path d="M19,6v14a2,2,0,0,1-2,2H7a2,2,0,0,1-2-2V6m3,0V4a2,2,0,0,1,2-2h4a2,2,0,0,1,2,2v2"></path>
+                        </svg>
+                        Clear All
+                    </button>
+                </div>
+                <span class="close" onclick="closeGalleryModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="galleryGrid" class="gallery-grid">
+                    <div class="gallery-empty">
+                        <div class="gallery-empty-icon">🖼️</div>
+                        <h3>No images yet</h3>
+                        <div class="gallery-empty-subtitle">Generated images will appear here</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div> -->
+
+    <!-- Image Detail Modal - DISABLED -->
+    <!--
+    <div id="imageDetailModal" class="modal" style="display: none;">
+        <div class="modal-content image-detail-modal">
+            <div class="modal-header">
+                <h2>Image Details</h2>
+                <span class="close" onclick="closeImageDetailModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="image-detail-content">
+                    <div class="image-detail-preview">
+                        <img id="detailImage" src="" alt="Generated image">
+                    </div>
+                    <div class="image-detail-info">
+                        <div class="detail-section">
+                            <h3>Prompt</h3>
+                            <div id="detailPrompt" class="detail-prompt"></div>
+                        </div>
+                        <div class="detail-section">
+                            <h3>Generated</h3>
+                            <div id="detailTimestamp" class="detail-timestamp"></div>
+                        </div>
+                        <div class="detail-actions">
+                            <button class="detail-btn" onclick="downloadDetailImage()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="7,10 12,15 17,10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                                Download
+                            </button>
+                            <button class="detail-btn secondary" onclick="deleteDetailImage()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="3,6 5,6 21,6"></polyline>
+                                    <path d="M19,6v14a2,2,0,0,1-2,2H7a2,2,0,0,1-2-2V6m3,0V4a2,2,0,0,1,2-2h4a2,2,0,0,1,2,2v2"></path>
+                                </svg>
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    -->
+
+    <script>
+        // Global variables
+        let currentApiKey = null;
+        let uploadedImageData = null;
+        let chatHistory = [];
+        let currentImageData = null;
+        let lastGeneratedImageData = null;
+        let sessionPersistenceEnabled = false;
+        let isDrawingMode = false;
+        let isDrawing = false;
+        let selectedRegionData = null;
+        let currentDrawingPath = [];
+        let allDrawingPaths = [];
+        let undoHistory = [];
+        let hasDrawings = false;
+        
+        // Magic prompt variables
+        let magicQuestions = [];
+        let magicInitialPrompt = '';
+        let magicAnswers = [];
+
+        // Gallery variables - DISABLED
+        // let imageGallery = [];
+        // let currentDetailImageId = null;
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            loadApiKey();
+            loadSessionPersistenceState();
+            // Gallery functionality disabled
+            // loadGallery();
+            // updateGalleryButton();
+            
+            // Only load session data if persistence is enabled
+            if (sessionPersistenceEnabled) {
+                loadSessionData();
+            } else {
+                // Clear any existing session data on page load if persistence is disabled
+                clearSessionData();
+            }
+            
+            if (!currentApiKey) {
+                openApiKeyModal();
+            }
+            
+            // Auto-resize chat input
+            const chatInput = document.getElementById('chatInput');
+            chatInput.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+            });
+        });
+
+        // Session persistence toggle
+        function toggleSessionPersistence() {
+            sessionPersistenceEnabled = !sessionPersistenceEnabled;
+            updateSessionToggleUI();
+            saveSessionPersistenceState();
+            
+            if (!sessionPersistenceEnabled) {
+                // If turning off persistence, clear existing session data
+                clearSessionData();
+            } else {
+                // If turning on persistence, save current state
+                saveSessionData();
+            }
+        }
+
+        function loadSessionPersistenceState() {
+            const saved = localStorage.getItem('nano_banana_session_persistence');
+            sessionPersistenceEnabled = saved === 'true';
+            updateSessionToggleUI();
+        }
+
+        function saveSessionPersistenceState() {
+            localStorage.setItem('nano_banana_session_persistence', sessionPersistenceEnabled.toString());
+        }
+
+        function updateSessionToggleUI() {
+            const toggle = document.getElementById('sessionToggle');
+            if (sessionPersistenceEnabled) {
+                toggle.classList.add('active');
+            } else {
+                toggle.classList.remove('active');
+            }
+        }
+
+        // Session storage management
+        function saveSessionData() {
+            if (!sessionPersistenceEnabled) return;
+            
+            const sessionData = {
+                lastGeneratedImageData: lastGeneratedImageData,
+                currentImageData: currentImageData,
+                chatHistory: chatHistory
+            };
+            sessionStorage.setItem('nano_banana_session', JSON.stringify(sessionData));
+        }
+
+        function loadSessionData() {
+            const sessionData = sessionStorage.getItem('nano_banana_session');
+            if (sessionData) {
+                try {
+                    const data = JSON.parse(sessionData);
+                    lastGeneratedImageData = data.lastGeneratedImageData;
+                    currentImageData = data.currentImageData;
+                    chatHistory = data.chatHistory || [];
+                    
+                    // Restore canvas if there was an image
+                    if (currentImageData) {
+                        displayImageInCanvas(currentImageData);
+                    }
+                    
+                    // Restore chat history
+                    if (chatHistory.length > 1) { // Skip the initial AI greeting
+                        const chatMessages = document.getElementById('chatMessages');
+                        chatMessages.innerHTML = ''; // Clear initial message
+                        
+                        // Add initial AI greeting back
+                        addInitialGreeting();
+                        
+                        // Restore messages
+                        chatHistory.forEach(msg => {
+                            if (msg.sender !== 'initial') {
+                                addChatMessageToDOM(msg.sender, msg.content, msg.imageData, msg.timestamp);
+                            }
+                        });
+                    }
+                } catch (e) {
+                    console.error('Failed to load session data:', e);
+                }
+            }
+        }
+
+        function clearSessionData() {
+            sessionStorage.removeItem('nano_banana_session');
+            lastGeneratedImageData = null;
+            currentImageData = null;
+            chatHistory = [];
+            
+            // Clear canvas
+            const canvasImage = document.getElementById('canvasImage');
+            const canvasPlaceholder = document.getElementById('canvasPlaceholder');
+            const canvasControls = document.getElementById('canvasControls');
+            
+            if (canvasImage) {
+                canvasImage.style.display = 'none';
+                canvasPlaceholder.style.display = 'block';
+                canvasControls.style.display = 'none';
+            }
+            
+            // Reset chat to initial state
+            const chatMessages = document.getElementById('chatMessages');
+            if (chatMessages) {
+                chatMessages.innerHTML = '';
+                addInitialGreeting();
+            }
+        }
+
+        // API Key Management
+        function loadApiKey() {
+            currentApiKey = localStorage.getItem('gemini_api_key');
+            updateApiStatus();
+        }
+
+        function updateApiStatus() {
+            const status = document.getElementById('apiStatus');
+            if (currentApiKey) {
+                status.textContent = 'Set ✓';
+                status.style.color = '#90EE90';
+            } else {
+                status.textContent = 'Not set';
+                status.style.color = '#FFB6C1';
+            }
+        }
+
+        function openApiKeyModal() {
+            document.getElementById('apiKeyModal').style.display = 'block';
+            if (currentApiKey) {
+                document.getElementById('apiKeyInput').value = currentApiKey;
+            }
+        }
+
+        function closeApiKeyModal() {
+            document.getElementById('apiKeyModal').style.display = 'none';
+        }
+
+        function saveApiKey() {
+            const apiKey = document.getElementById('apiKeyInput').value.trim();
+            if (apiKey) {
+                localStorage.setItem('gemini_api_key', apiKey);
+                currentApiKey = apiKey;
+                updateApiStatus();
+                closeApiKeyModal();
+                showSuccess('API Key saved successfully!');
+            } else {
+                showError('Please enter a valid API key.');
+            }
+        }
+
+        function clearApiKey() {
+            localStorage.removeItem('gemini_api_key');
+            currentApiKey = null;
+            updateApiStatus();
+            document.getElementById('apiKeyInput').value = '';
+            showSuccess('API Key cleared successfully!');
+        }
+
+        // Chat Interface Functions
+        function handleChatKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendChatMessage();
+            }
+        }
+
+        function triggerImageUpload() {
+            document.getElementById('chatImageUpload').click();
+        }
+
+        function handleChatImageUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    uploadedImageData = e.target.result;
+                    
+                    // Update upload button to show attached state
+                    const uploadBtn = document.getElementById('imageUploadBtn');
+                    uploadBtn.classList.add('has-image');
+                    uploadBtn.title = 'Image attached - ' + file.name;
+                    
+                    // Display the uploaded image on the canvas immediately
+                    displayUploadedImageInCanvas(uploadedImageData);
+                    
+                    // Add user message with uploaded image
+                    addChatMessage('user', `Attached: ${file.name}`, uploadedImageData);
+                    addChatMessage('ai', 'I can see your image. What would you like me to do with it?');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function displayUploadedImageInCanvas(imageData) {
+            const canvasImage = document.getElementById('canvasImage');
+            const canvasPlaceholder = document.getElementById('canvasPlaceholder');
+            const canvasControls = document.getElementById('canvasControls');
+            
+            // Don't overwrite lastGeneratedImageData - this is just a preview
+            currentImageData = imageData;
+            canvasImage.src = imageData;
+            canvasImage.style.display = 'block';
+            canvasPlaceholder.style.display = 'none';
+            canvasControls.style.display = 'flex';
+            
+            // Don't save to session storage for uploaded images - they're temporary previews
+        }
+
+        async function sendChatMessage() {
+            const chatInput = document.getElementById('chatInput');
+            const message = chatInput.value.trim();
+            
+            if (!message) return;
+            
+            if (!currentApiKey) {
+                addChatMessage('ai', 'Please set your API key first to start generating images.');
+                openApiKeyModal();
+                return;
+            }
+
+            // Determine which image to use for the API call
+            let imageToUse = uploadedImageData; // User uploaded image takes priority
+            let promptToSend = message;
+            
+            // If user has drawings, create the image with drawings and modify prompt
+            if (hasDrawings && currentImageData) {
+                createImageWithDrawing();
+                imageToUse = selectedRegionData;
+                promptToSend = message + "\n\nIMPORTANT INSTRUCTIONS:\n- The red drawing/circle marks the EXACT area to modify\n- Place new objects/changes ONLY within the red highlighted region\n- Keep the rest of the image unchanged\n- Follow the boundaries of the red drawing precisely\n- If adding objects, ensure they fit completely inside the marked area";
+                console.log('🎯 Using image with drawings for targeted editing');
+                
+                // Don't clear the drawings - keep them for continued editing
+            } else if (!imageToUse && lastGeneratedImageData) {
+                imageToUse = lastGeneratedImageData;
+                console.log('🖼️ Including last generated image for context');
+            }
+
+            // Clear input and add user message
+            chatInput.value = '';
+            chatInput.style.height = 'auto';
+            addChatMessage('user', message, uploadedImageData); // Only show uploaded image in chat
+
+            // Show typing indicator
+            showTypingIndicator();
+
+            try {
+                // Call the API
+                console.log('💬 Chat message:', message);
+                console.log('💬 Prompt to send:', promptToSend);
+                console.log('🖼️ Using image:', imageToUse ? 'Yes' : 'No');
+                const result = await callGeminiAPI(promptToSend, imageToUse, message);
+                console.log('✅ Chat response received');
+            } catch (error) {
+                console.error('💥 Chat failed:', error);
+                addChatMessage('ai', `Sorry, I encountered an error: ${error.message}`);
+            } finally {
+                hideTypingIndicator();
+                // Clear uploaded image after processing
+                if (uploadedImageData) {
+                    uploadedImageData = null;
+                    const uploadBtn = document.getElementById('imageUploadBtn');
+                    uploadBtn.classList.remove('has-image');
+                    uploadBtn.title = 'Attach image';
+                }
+            }
+        }
+
+
+        function addChatMessage(sender, content, imageData = null) {
+            const timestamp = Date.now();
+            addChatMessageToDOM(sender, content, imageData, timestamp);
+            
+            // Store in chat history
+            chatHistory.push({
+                sender,
+                content,
+                imageData,
+                timestamp
+            });
+            
+            // Save to session storage
+            saveSessionData();
+        }
+
+        function addChatMessageToDOM(sender, content, imageData = null, timestamp = Date.now()) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            
+            const time = new Date(timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: false});
+            
+            let imagePreview = '';
+            if (imageData && sender === 'user') {
+                imagePreview = `<img src="${imageData}" style="max-width: 200px; max-height: 150px; border-radius: 8px; margin: 8px 0; display: block;">`;
+            }
+            
+            messageDiv.innerHTML = `
+                <div class="message-avatar">${sender === 'user' ? 'You' : ''}</div>
+                <div class="message-content">
+                    ${imagePreview}
+                    <div>${content}</div>
+                    <div class="message-time">${time}</div>
+                </div>
+            `;
+            
+            chatMessages.appendChild(messageDiv);
+            
+            // Handle AI avatar fallback
+            if (sender === 'ai') {
+                const avatar = messageDiv.querySelector('.message-avatar');
+                const img = new Image();
+                img.onload = function() {
+                    // Image loaded successfully, keep the CSS background-image
+                };
+                img.onerror = function() {
+                    // Image failed to load, use fallback
+                    avatar.classList.add('fallback');
+                };
+                img.src = 'ai.png';
+            }
+            
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function addInitialGreeting() {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message ai';
+            
+            messageDiv.innerHTML = `
+                <div class="message-avatar"></div>
+                <div class="message-content">
+                    <div>Hello! I can help you generate and edit images. Try:</div>
+                    <div style="margin: 8px 0; font-size: 13px; color: #6c757d;">
+                        • "Create a sunset over mountains"<br>
+                        • "Generate a minimalist logo design"<br>
+                        • Upload an image to edit it
+                    </div>
+                    <div class="message-time">Now</div>
+                </div>
+            `;
+            
+            chatMessages.appendChild(messageDiv);
+            
+            // Handle AI avatar fallback for initial greeting
+            const avatar = messageDiv.querySelector('.message-avatar');
+            const img = new Image();
+            img.onload = function() {
+                // Image loaded successfully, keep the CSS background-image
+            };
+            img.onerror = function() {
+                // Image failed to load, use fallback
+                avatar.classList.add('fallback');
+            };
+            img.src = 'ai.png';
+        }
+
+        function showTypingIndicator() {
+            // Remove any existing typing indicator
+            const existingIndicator = document.getElementById('typingIndicator');
+            if (existingIndicator) {
+                existingIndicator.remove();
+            }
+            
+            // Create new typing indicator
+            const chatMessages = document.getElementById('chatMessages');
+            const typingIndicator = document.createElement('div');
+            typingIndicator.id = 'typingIndicator';
+            typingIndicator.className = 'message ai';
+            
+            typingIndicator.innerHTML = `
+                <div class="message-avatar"></div>
+                <div class="typing-indicator show">
+                    <span class="typing-text">thinking</span>
+                    <div class="typing-dots">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                </div>
+            `;
+            
+            chatMessages.appendChild(typingIndicator);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function hideTypingIndicator() {
+            const typingIndicator = document.getElementById('typingIndicator');
+            if (typingIndicator) {
+                const typingBubble = typingIndicator.querySelector('.typing-indicator');
+                if (typingBubble) {
+                    typingBubble.classList.remove('show');
+                }
+                
+                setTimeout(() => {
+                    if (typingIndicator && typingIndicator.parentNode) {
+                        typingIndicator.remove();
+                    }
+                }, 200);
+            }
+        }
+
+        function displayImageInCanvas(imageData, prompt = null) {
+            console.log('🖼️ displayImageInCanvas called with:');
+            console.log('  - imageData length:', imageData ? imageData.length : 'null');
+            console.log('  - prompt:', prompt);
+            console.log('  - prompt type:', typeof prompt);
+            
+            const canvasImage = document.getElementById('canvasImage');
+            const canvasPlaceholder = document.getElementById('canvasPlaceholder');
+            const canvasControls = document.getElementById('canvasControls');
+            
+            currentImageData = imageData;
+            lastGeneratedImageData = imageData; // Store for future edits
+            canvasImage.src = imageData;
+            canvasImage.style.display = 'block';
+            canvasPlaceholder.style.display = 'none';
+            canvasControls.style.display = 'flex';
+            
+            // Save session data if enabled
+            saveSessionData();
+            
+            // Gallery functionality temporarily disabled - will implement with proper database storage
+            // TODO: Implement gallery with database backend for large image storage
+            /*
+            // Add to gallery if this is a newly generated image (has prompt and prompt is not null/undefined)
+            // More robust validation to prevent "undefined" prompts
+            console.log('🔍 Validating prompt for gallery addition:');
+            console.log('  - prompt exists:', !!prompt);
+            console.log('  - is string:', typeof prompt === 'string');
+            console.log('  - not "undefined":', prompt !== 'undefined');
+            console.log('  - not "null":', prompt !== 'null');
+            console.log('  - not empty after trim:', prompt && prompt.trim() !== '');
+            
+            if (prompt && 
+                typeof prompt === 'string' && 
+                prompt !== 'undefined' && 
+                prompt !== 'null' && 
+                prompt.trim() !== '' && 
+                prompt.trim().length > 0) {
+                console.log('✅ Prompt validation passed - adding to gallery with prompt:', prompt);
+                addToGallery(imageData, prompt.trim());
+            } else {
+                console.log('❌ Prompt validation failed - skipping gallery addition');
+                console.log('  - prompt value:', prompt);
+                console.log('  - prompt type:', typeof prompt);
+            }
+            */
+            
+            // Clear all drawings when new image is generated
+            if (hasDrawings) {
+                clearDrawingCanvas();
+                console.log('Cleared drawings after new image generation');
+                
+                // Exit drawing mode if currently active
+                if (isDrawingMode) {
+                    togglePenTool();
+                }
+            }
+            
+            // Save to session storage
+            saveSessionData();
+        }
+
+        function clearCanvas() {
+            const canvasImage = document.getElementById('canvasImage');
+            const canvasPlaceholder = document.getElementById('canvasPlaceholder');
+            const canvasControls = document.getElementById('canvasControls');
+            
+            currentImageData = null;
+            lastGeneratedImageData = null; // Clear stored image data
+            selectedRegionData = null; // Clear selected region
+            canvasImage.style.display = 'none';
+            canvasPlaceholder.style.display = 'block';
+            canvasControls.style.display = 'none';
+            
+            // Clear drawing canvas
+            clearDrawingCanvas();
+            
+            // Clear session storage
+            clearSessionData();
+            
+            showToast('Canvas cleared successfully!', 'success');
+        }
+
+        function newCanvas() {
+            // Clear canvas and all context
+            clearCanvas();
+            
+            // Clear chat history to remove context
+            chatHistory = [];
+            
+            // Clear the chat messages display
+            const chatMessages = document.getElementById('chatMessages');
+            chatMessages.innerHTML = '';
+            
+            // Clear uploaded image data
+            uploadedImageData = null;
+            
+            // Reset image upload button
+            const imageUploadBtn = document.getElementById('imageUploadBtn');
+            imageUploadBtn.classList.remove('has-image');
+            
+            // Add fresh greeting
+            addInitialGreeting();
+            
+            showToast('New canvas started! Context cleared.', 'success');
+        }
+
+        // Pen Tool Functions
+        function togglePenTool() {
+            const penTool = document.getElementById('penTool');
+            const canvasArea = document.querySelector('.canvas-area');
+            const drawingCanvas = document.getElementById('drawingCanvas');
+            const undoBtn = document.getElementById('undoStroke');
+            const redoBtn = document.getElementById('redoStroke');
+            const clearDrawingBtn = document.getElementById('clearDrawing');
+            
+            console.log('🖊️ Pen tool clicked. Current drawing mode:', isDrawingMode);
+            
+            if (!currentImageData) {
+                showToast('Please generate an image first before using the pen tool', 'error');
+                return;
+            }
+            
+            isDrawingMode = !isDrawingMode;
+            console.log('🖊️ Toggling to drawing mode:', isDrawingMode);
+            
+            if (isDrawingMode) {
+                penTool.classList.add('active');
+                canvasArea.classList.add('drawing-mode');
+                drawingCanvas.style.display = 'block';
+                
+                // Show drawing control buttons
+                undoBtn.style.display = 'flex';
+                redoBtn.style.display = 'flex';
+                clearDrawingBtn.style.display = 'flex';
+                
+                setupDrawingCanvas();
+                updateDrawingButtons();
+                showToast('Draw multiple strokes. Use undo/redo/clear buttons to manage your drawings.', 'success');
+            } else {
+                penTool.classList.remove('active');
+                canvasArea.classList.remove('drawing-mode');
+                drawingCanvas.style.display = 'none';
+                
+                // Hide drawing control buttons
+                undoBtn.style.display = 'none';
+                redoBtn.style.display = 'none';
+                clearDrawingBtn.style.display = 'none';
+                
+                showToast('Exited drawing mode', 'success');
+            }
+        }
+
+        function setupDrawingCanvas() {
+            const drawingCanvas = document.getElementById('drawingCanvas');
+            const canvasImage = document.getElementById('canvasImage');
+            const ctx = drawingCanvas.getContext('2d');
+            
+            // Position canvas exactly over the image
+            const imageRect = canvasImage.getBoundingClientRect();
+            const canvasAreaRect = canvasImage.parentElement.getBoundingClientRect();
+            
+            // Set canvas size to match the displayed image size
+            drawingCanvas.width = imageRect.width;
+            drawingCanvas.height = imageRect.height;
+            
+            // Position canvas exactly over the image
+            drawingCanvas.style.left = (imageRect.left - canvasAreaRect.left) + 'px';
+            drawingCanvas.style.top = (imageRect.top - canvasAreaRect.top) + 'px';
+            drawingCanvas.style.width = imageRect.width + 'px';
+            drawingCanvas.style.height = imageRect.height + 'px';
+            
+            // Clear any existing drawings
+            ctx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+            
+            // Set drawing style
+            ctx.strokeStyle = '#ff4444';
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            
+            // Redraw existing paths
+            redrawAllPaths();
+            
+            // Remove old event listeners
+            drawingCanvas.removeEventListener('mousedown', startDrawing);
+            drawingCanvas.removeEventListener('mousemove', draw);
+            drawingCanvas.removeEventListener('mouseup', endDrawing);
+            drawingCanvas.removeEventListener('mouseleave', endDrawing);
+            
+            // Add event listeners for free drawing
+            drawingCanvas.addEventListener('mousedown', startDrawing);
+            drawingCanvas.addEventListener('mousemove', draw);
+            drawingCanvas.addEventListener('mouseup', endDrawing);
+            drawingCanvas.addEventListener('mouseleave', endDrawing);
+        }
+
+        function startDrawing(e) {
+            if (!isDrawingMode) return;
+            
+            isDrawing = true;
+            const rect = e.target.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            // Start new path
+            currentDrawingPath = [{x, y}];
+            
+            const ctx = e.target.getContext('2d');
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+        }
+
+        function draw(e) {
+            if (!isDrawing || !isDrawingMode) return;
+            
+            const rect = e.target.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            // Add point to current path
+            currentDrawingPath.push({x, y});
+            
+            const ctx = e.target.getContext('2d');
+            ctx.lineTo(x, y);
+            ctx.stroke();
+        }
+
+        function endDrawing(e) {
+            if (!isDrawing || !isDrawingMode) return;
+            
+            isDrawing = false;
+            
+            if (currentDrawingPath.length > 1) {
+                // Save current state to undo history before adding new stroke
+                undoHistory.push([...allDrawingPaths]);
+                
+                // Save the completed path
+                allDrawingPaths.push([...currentDrawingPath]);
+                hasDrawings = true;
+                
+                // Clear current path for next stroke
+                currentDrawingPath = [];
+                
+                // Update button states
+                updateDrawingButtons();
+                
+                console.log('Drawing stroke completed. Total strokes:', allDrawingPaths.length);
+            }
+        }
+
+        function undoLastStroke() {
+            if (undoHistory.length > 0) {
+                // Restore previous state
+                allDrawingPaths = undoHistory.pop();
+                hasDrawings = allDrawingPaths.length > 0;
+                
+                // Redraw canvas
+                redrawAllPaths();
+                updateDrawingButtons();
+                
+                console.log('↶ Undo: Restored to', allDrawingPaths.length, 'strokes');
+            }
+        }
+
+        function redoLastStroke() {
+            // For now, redo is not implemented as it requires more complex history management
+            // Could be added later with a separate redo stack
+            showToast('Redo feature coming soon!', 'error');
+        }
+
+        function updateDrawingButtons() {
+            const undoBtn = document.getElementById('undoStroke');
+            const redoBtn = document.getElementById('redoStroke');
+            const clearBtn = document.getElementById('clearDrawing');
+            
+            if (undoBtn) {
+                undoBtn.disabled = undoHistory.length === 0;
+                undoBtn.style.opacity = undoHistory.length === 0 ? '0.5' : '1';
+            }
+            
+            if (redoBtn) {
+                redoBtn.disabled = true; // Redo not implemented yet
+                redoBtn.style.opacity = '0.5';
+            }
+            
+            if (clearBtn) {
+                clearBtn.disabled = allDrawingPaths.length === 0;
+                clearBtn.style.opacity = allDrawingPaths.length === 0 ? '0.5' : '1';
+            }
+        }
+
+        function redrawAllPaths() {
+            const drawingCanvas = document.getElementById('drawingCanvas');
+            const ctx = drawingCanvas.getContext('2d');
+            
+            // Clear and redraw all paths
+            ctx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+            
+            // Set drawing style
+            ctx.strokeStyle = '#ff4444';
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            
+            // Draw each saved path
+            allDrawingPaths.forEach(path => {
+                if (path.length > 1) {
+                    ctx.beginPath();
+                    ctx.moveTo(path[0].x, path[0].y);
+                    
+                    for (let i = 1; i < path.length; i++) {
+                        ctx.lineTo(path[i].x, path[i].y);
+                    }
+                    
+                    ctx.stroke();
+                }
+            });
+        }
+
+        function createImageWithDrawing() {
+            const canvasImage = document.getElementById('canvasImage');
+            const drawingCanvas = document.getElementById('drawingCanvas');
+            
+            // Create a temporary canvas to combine image and drawing
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            
+            // Set canvas size to match the original image
+            tempCanvas.width = canvasImage.naturalWidth;
+            tempCanvas.height = canvasImage.naturalHeight;
+            
+            // Draw the currently displayed image (which could be uploaded or generated)
+            tempCtx.drawImage(canvasImage, 0, 0);
+            
+            console.log('🖼️ Using base image:', canvasImage.src.substring(0, 50) + '...');
+            
+            // Scale the drawing coordinates to match the original image size
+            const scaleX = canvasImage.naturalWidth / drawingCanvas.width;
+            const scaleY = canvasImage.naturalHeight / drawingCanvas.height;
+            
+            // Set drawing style for the final image
+            tempCtx.strokeStyle = '#ff4444';
+            tempCtx.lineWidth = Math.max(4, Math.min(scaleX, scaleY) * 3); // Scale line width
+            tempCtx.lineCap = 'round';
+            tempCtx.lineJoin = 'round';
+            
+            // Draw all paths on the final image
+            allDrawingPaths.forEach(path => {
+                if (path.length > 1) {
+                    tempCtx.beginPath();
+                    tempCtx.moveTo(path[0].x * scaleX, path[0].y * scaleY);
+                    
+                    for (let i = 1; i < path.length; i++) {
+                        tempCtx.lineTo(path[i].x * scaleX, path[i].y * scaleY);
+                    }
+                    
+                    tempCtx.stroke();
+                }
+            });
+            
+            // Convert to base64 and store
+            selectedRegionData = tempCanvas.toDataURL('image/png');
+            console.log('🖼️ Created image with', allDrawingPaths.length, 'drawing strokes');
+        }
+
+        function clearDrawingOnly() {
+            // Save current state to undo history before clearing
+            if (allDrawingPaths.length > 0) {
+                undoHistory.push([...allDrawingPaths]);
+            }
+            
+            allDrawingPaths = [];
+            currentDrawingPath = [];
+            hasDrawings = false;
+            selectedRegionData = null;
+            
+            const drawingCanvas = document.getElementById('drawingCanvas');
+            const ctx = drawingCanvas.getContext('2d');
+            ctx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+            
+            // Update button states
+            updateDrawingButtons();
+            
+            showToast('All drawings cleared', 'success');
+            console.log('🧹 All drawings cleared');
+        }
+
+        function clearDrawingCanvas() {
+            const drawingCanvas = document.getElementById('drawingCanvas');
+            if (drawingCanvas) {
+                const ctx = drawingCanvas.getContext('2d');
+                ctx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+            }
+            
+            allDrawingPaths = [];
+            currentDrawingPath = [];
+            undoHistory = [];
+            hasDrawings = false;
+            selectedRegionData = null;
+        }
+
+        function downloadCurrentImage() {
+            if (currentImageData) {
+                const link = document.createElement('a');
+                link.href = currentImageData;
+                link.download = `gemini-generated-${Date.now()}.png`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        }
+
+        // Legacy functions - kept for compatibility but not used in chat interface
+
+        // Gemini API Call
+        async function callGeminiAPI(prompt, imageData = null, originalPrompt = null) {
+            const MODEL_ID = "gemini-2.5-flash-image-preview";
+            const GENERATE_CONTENT_API = "generateContent"; // Use non-streaming for simplicity
+            
+            console.log('🚀 Using non-streaming API with conversation context');
+            return await callGeminiAPIInternal(MODEL_ID, GENERATE_CONTENT_API, prompt, imageData, originalPrompt || prompt);
+        }
+
+        // Internal API call function
+        async function callGeminiAPIInternal(modelId, apiMethod, prompt, imageData = null, originalPrompt = null) {
+            console.log('🚀 Starting Gemini API call');
+            console.log('📋 Model ID:', modelId);
+            console.log('📋 API method:', apiMethod);
+            console.log('📋 Current prompt:', prompt);
+            console.log('📋 Has input image:', !!imageData);
+            console.log('📋 Chat history length:', chatHistory.length);
+            
+            // Build conversation history
+            const contents = [];
+            
+            // Add previous messages from chat history (skip the initial AI greeting and the current message)
+            // The current message will be added separately below
+            const currentMessageCount = chatHistory.length;
+            chatHistory.slice(0, -1).forEach(msg => { // Skip the last message (current one)
+                if (msg.sender !== 'initial') {
+                    const parts = [{ text: msg.content }];
+                    
+                    // Add image if this message had one
+                    if (msg.imageData && msg.sender === 'user') {
+                        const [mimeType, base64Data] = msg.imageData.split(',');
+                        const mimeTypeMatch = mimeType.match(/data:([^;]+);base64/);
+                        if (mimeTypeMatch) {
+                            parts.push({
+                                inlineData: {
+                                    mimeType: mimeTypeMatch[1],
+                                    data: base64Data
+                                }
+                            });
+                        }
+                    }
+                    
+                    contents.push({
+                        role: msg.sender === 'user' ? 'user' : 'model',
+                        parts: parts
+                    });
+                }
+            });
+            
+            // Add current message
+            const currentParts = [{ text: prompt }];
+            
+            if (imageData) {
+                console.log('🖼️ Processing current input image...');
+                const [mimeType, base64Data] = imageData.split(',');
+                const mimeTypeMatch = mimeType.match(/data:([^;]+);base64/);
+                if (mimeTypeMatch) {
+                    currentParts.push({
+                        inlineData: {
+                            mimeType: mimeTypeMatch[1],
+                            data: base64Data
+                        }
+                    });
+                    console.log('📋 Added current image to request');
+                }
+            }
+            
+            contents.push({
+                role: "user",
+                parts: currentParts
+            });
+
+            const requestBody = {
+                contents: contents,
+                generationConfig: {
+                    responseModalities: ["IMAGE", "TEXT"]
+                }
+            };
+
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:${apiMethod}?key=${currentApiKey}`;
+            
+            console.log('📋 Request URL:', apiUrl.replace(currentApiKey, '[API_KEY_HIDDEN]'));
+            console.log('📋 Request body:', JSON.stringify(requestBody, null, 2));
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                console.log('📡 Response received');
+                console.log('📋 Response status:', response.status);
+                console.log('📋 Response ok:', response.ok);
+                console.log('📋 Response headers:', Object.fromEntries(response.headers.entries()));
+
+                if (!response.ok) {
+                    console.error('❌ API request failed');
+                    let errorData;
+                    try {
+                        errorData = await response.json();
+                        console.error('📋 Error response:', errorData);
+                    } catch (e) {
+                        console.error('❌ Failed to parse error response:', e);
+                        errorData = {};
+                    }
+                    throw new Error(errorData.error?.message || `HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                console.log('✅ API request successful');
+                
+                // Handle different response types
+                if (apiMethod === 'streamGenerateContent') {
+                    console.log('📡 Using streaming response handler');
+                    return response; // Return for streaming processing
+                } else {
+                    console.log('📡 Using non-streaming response handler');
+                    return await handleNonStreamingResponse(response, prompt, originalPrompt);
+                }
+            } catch (error) {
+                console.error('💥 API call failed:', error);
+                throw error;
+            }
+        }
+
+        // Handle non-streaming responses
+        async function handleNonStreamingResponse(response, prompt, originalPrompt) {
+            console.log('🔍 Processing non-streaming response');
+            try {
+                const data = await response.json();
+                console.log('📋 Non-streaming response data structure:', JSON.stringify(data, (key, value) => {
+                    // Truncate long base64 data for logging
+                    if (key === 'data' && typeof value === 'string' && value.length > 100) {
+                        return value.substring(0, 50) + '...[truncated ' + (value.length - 50) + ' chars]';
+                    }
+                    return value;
+                }, 2));
+                
+                const result = findImageInResponse(data);
+                if (result && result.image) {
+                    console.log('🖼️ Image found in non-streaming response!');
+                    console.log('📋 Image data preview:', result.image.substring(0, 50) + '...');
+                    
+                    // Display in canvas with prompt for gallery
+                    console.log('🎯 About to call displayImageInCanvas with:');
+                    console.log('  - originalPrompt:', originalPrompt);
+                    console.log('  - prompt:', prompt);
+                    console.log('  - using:', originalPrompt || prompt);
+                    displayImageInCanvas(result.image, originalPrompt || prompt);
+                    
+                    // Use Gemini's text response if available, otherwise use generic message
+                    const messageToShow = result.text || 'Image generated successfully.';
+                    addChatMessage('ai', messageToShow);
+                    
+                    return response;
+                } else {
+                    console.log('📝 No image generated - checking for error or text response');
+                    
+                    // Check for prohibited content or other errors
+                    if (data.candidates && data.candidates[0] && data.candidates[0].finishReason) {
+                        const finishReason = data.candidates[0].finishReason;
+                        if (finishReason === 'PROHIBITED_CONTENT') {
+                            const errorMessage = 'Content was blocked due to safety policies. Please try a different prompt or modify your request.';
+                            addChatMessage('ai', errorMessage);
+                            return response;
+                        } else if (finishReason === 'MAX_TOKENS') {
+                            const errorMessage = 'Response was too long and was cut off. Please try a more specific prompt.';
+                            addChatMessage('ai', errorMessage);
+                            return response;
+                        } else if (finishReason !== 'STOP') {
+                            const errorMessage = `Generation stopped due to: ${finishReason}. Please try again with a different prompt.`;
+                            addChatMessage('ai', errorMessage);
+                            return response;
+                        }
+                    }
+                    
+                    // The findImageInResponse function already handled showing the text response
+                    return { textOnly: true };
+                }
+            } catch (error) {
+                console.error('💥 Failed to process non-streaming response:', error);
+                throw error;
+            }
+        }
+
+        // Handle API Response
+        async function handleApiResponse(response) {
+            console.log('🔍 Starting API response handling');
+            console.log('Response status:', response.status);
+            console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let fullResponseText = '';
+            let chunkCount = 0;
+
+            try {
+                // First, collect the entire response
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) {
+                        console.log('✅ Stream reading completed. Total chunks:', chunkCount);
+                        break;
+                    }
+
+                    chunkCount++;
+                    const chunkText = decoder.decode(value, { stream: true });
+                    console.log(`📦 Chunk ${chunkCount}:`, chunkText.length > 200 ? chunkText.substring(0, 200) + '...' : chunkText);
+                    
+                    fullResponseText += chunkText;
+                }
+
+                console.log('📋 Full response length:', fullResponseText.length);
+                console.log('📋 Full response preview:', fullResponseText.substring(0, 500) + '...');
+
+                // Now try to parse the complete response
+                let parsedResponse = null;
+                let imageData = null;
+
+                // Try parsing as complete JSON
+                try {
+                    parsedResponse = JSON.parse(fullResponseText);
+                    console.log('✅ Successfully parsed complete JSON response');
+                    console.log('📋 Parsed response structure:', JSON.stringify(parsedResponse, (key, value) => {
+                        // Truncate long base64 data for logging
+                        if (key === 'data' && typeof value === 'string' && value.length > 100) {
+                            return value.substring(0, 50) + '...[truncated ' + (value.length - 50) + ' chars]';
+                        }
+                        return value;
+                    }, 2));
+                } catch (e) {
+                    console.warn('⚠️ Failed to parse as complete JSON, trying line-by-line approach:', e);
+                    
+                    // Fallback: try parsing line by line for streaming responses
+                    const lines = fullResponseText.split('\n');
+                    for (const line of lines) {
+                        if (line.trim()) {
+                            // Try parsing as SSE format (data: prefix)
+                            if (line.startsWith('data: ')) {
+                                try {
+                                    const jsonData = JSON.parse(line.slice(6));
+                                    console.log('📋 Parsed SSE line:', jsonData);
+                                    if (!parsedResponse) parsedResponse = jsonData;
+                                } catch (e) {
+                                    console.warn('⚠️ Failed to parse SSE line:', line.substring(0, 100));
+                                }
+                            }
+                            // Try parsing as direct JSON
+                            else if (line.startsWith('{')) {
+                                try {
+                                    const jsonData = JSON.parse(line);
+                                    console.log('📋 Parsed JSON line:', jsonData);
+                                    if (!parsedResponse) parsedResponse = jsonData;
+                                } catch (e) {
+                                    console.warn('⚠️ Failed to parse JSON line:', line.substring(0, 100));
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Look for image data in the parsed response
+                if (parsedResponse) {
+                    console.log('🔍 Searching for image data in parsed response...');
+                    imageData = findImageInResponse(parsedResponse);
+                }
+
+                console.log('🖼️ Final image data:', imageData ? 'Found' : 'Not found');
+
+                if (imageData) {
+                    displayResult(imageData);
+                } else {
+                    console.error('❌ No image data found in response');
+                    console.log('🔍 Full response for analysis:', fullResponseText.substring(0, 2000));
+                    throw new Error('No image data received from the API. Check console for detailed response analysis.');
+                }
+            } catch (error) {
+                console.error('💥 Error processing API response:', error);
+                throw new Error('Failed to process API response: ' + error.message);
+            }
+        }
+
+        // Helper function to find image data in various response formats
+        function findImageInResponse(jsonData) {
+            console.log('🔍 Analyzing response structure for both text and image content');
+            
+            let foundText = '';
+            let foundImage = null;
+            
+            // Check standard candidates structure
+            if (jsonData.candidates && Array.isArray(jsonData.candidates)) {
+                console.log('📋 Found candidates array, length:', jsonData.candidates.length);
+                
+                for (let i = 0; i < jsonData.candidates.length; i++) {
+                    const candidate = jsonData.candidates[i];
+                    console.log(`🔍 Checking candidate ${i}:`, candidate);
+                    
+                    if (candidate.content && candidate.content.parts && Array.isArray(candidate.content.parts)) {
+                        console.log(`📋 Found parts array in candidate ${i}, length:`, candidate.content.parts.length);
+                        
+                        for (let j = 0; j < candidate.content.parts.length; j++) {
+                            const part = candidate.content.parts[j];
+                            console.log(`🔍 Checking part ${j}:`, part);
+                            
+                            // Check for text content
+                            if (part.text) {
+                                console.log('📝 Found text content:', part.text.substring(0, 100) + '...');
+                                foundText += part.text;
+                            }
+                            
+                            // Check for image content
+                            if (part.inlineData && part.inlineData.data) {
+                                console.log('🖼️ Found inlineData with data!');
+                                console.log('📋 MIME type:', part.inlineData.mimeType);
+                                console.log('📋 Data length:', part.inlineData.data.length);
+                                foundImage = `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+                            }
+                            
+                            // Check for alternative image formats
+                            if (part.image && part.image.data) {
+                                console.log('🖼️ Found image.data!');
+                                foundImage = `data:${part.image.mimeType || 'image/png'};base64,${part.image.data}`;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Check direct image data
+            if (jsonData.inlineData && jsonData.inlineData.data) {
+                console.log('🖼️ Found direct inlineData!');
+                foundImage = `data:${jsonData.inlineData.mimeType};base64,${jsonData.inlineData.data}`;
+            }
+            
+            // Check for other possible formats
+            if (jsonData.image && jsonData.image.data) {
+                console.log('🖼️ Found direct image data!');
+                foundImage = `data:${jsonData.image.mimeType || 'image/png'};base64,${jsonData.image.data}`;
+            }
+            
+            // Return results - now return both image and text
+            if (foundImage) {
+                console.log('✅ Image found!');
+                return { image: foundImage, text: foundText };
+            } else if (foundText) {
+                console.log('📝 Only text found, no image. Text:', foundText.substring(0, 200) + '...');
+                
+                // Show the text to the user and suggest trying a more specific prompt
+                showTextResponse(foundText);
+                return null;
+            } else {
+                console.log('❌ No image or text data found in response');
+                return null;
+            }
+        }
+
+        // Show text response when no image is generated
+        function showTextResponse(text) {
+            const suggestions = [
+                "Generate a sunset over mountains",
+                "Create a minimalist logo design", 
+                "Draw a modern architectural building",
+                "Make an abstract geometric pattern"
+            ];
+            
+            const suggestionText = suggestions.map(s => `• ${s}`).join('<br>');
+            
+            const chatResponse = `${text}
+
+To generate an image, try being more specific:
+<div style="margin: 8px 0; font-size: 13px; color: #6c757d;">
+${suggestionText}
+</div>`;
+
+            addChatMessage('ai', chatResponse);
+        }
+
+        // Display Result
+        function displayResult(imageData) {
+            const resultImage = document.getElementById('resultImage');
+            resultImage.src = imageData;
+            resultImage.dataset.imageData = imageData;
+            
+            document.getElementById('resultSection').classList.add('show');
+        }
+
+        // Download Image
+        function downloadImage() {
+            const resultImage = document.getElementById('resultImage');
+            const imageData = resultImage.dataset.imageData;
+            
+            if (imageData) {
+                const link = document.createElement('a');
+                link.href = imageData;
+                link.download = `gemini-generated-${Date.now()}.png`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        }
+
+        // UI Helper Functions
+        function showLoading() {
+            document.getElementById('loading').classList.add('show');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').classList.remove('show');
+        }
+
+        function hideResults() {
+            document.getElementById('resultSection').classList.remove('show');
+        }
+
+        function showError(message) {
+            showToast(message, 'error');
+        }
+
+        function showToast(message, type = 'success') {
+            const toastContainer = document.getElementById('toastContainer');
+            
+            const toast = document.createElement('div');
+            toast.className = `toast ${type === 'error' ? 'error' : ''}`;
+            
+            const iconSvg = type === 'error' ? 
+                `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#dc3545" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="15" y1="9" x2="9" y2="15"></line>
+                    <line x1="9" y1="9" x2="15" y2="15"></line>
+                </svg>` :
+                `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#28a745" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22,4 12,14.01 9,11.01"></polyline>
+                </svg>`;
+            
+            toast.innerHTML = `
+                ${iconSvg}
+                <div class="toast-content">${message}</div>
+                <button class="toast-close" onclick="this.parentElement.remove()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            `;
+            
+            toastContainer.appendChild(toast);
+            
+            // Auto-remove toast after 4 seconds
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.style.animation = 'toastSlideOut 0.3s ease-in forwards';
+                    setTimeout(() => toast.remove(), 300);
+                }
+            }, 4000);
+        }
+
+        function showSuccess(message) {
+            showToast(message, 'success');
+        }
+
+        // Close modal when clicking outside of it
+        window.onclick = function(event) {
+            const apiModal = document.getElementById('apiKeyModal');
+            const magicModal = document.getElementById('magicPromptModal');
+            if (event.target === apiModal) {
+                closeApiKeyModal();
+            }
+            if (event.target === magicModal) {
+                closeMagicPromptModal();
+            }
+        }
+
+        // Magic Prompt Functions
+        function openMagicPromptModal() {
+            const modal = document.getElementById('magicPromptModal');
+            modal.style.display = 'block';
+            
+            // Reset to step 1
+            showMagicStep(1);
+            
+            // Clear previous data
+            document.getElementById('initialPrompt').value = '';
+            magicQuestions = [];
+            magicInitialPrompt = '';
+            magicAnswers = [];
+        }
+
+        function closeMagicPromptModal() {
+            const modal = document.getElementById('magicPromptModal');
+            modal.style.display = 'none';
+        }
+
+        function showMagicStep(step) {
+            // Hide all steps
+            document.getElementById('magicStep1').style.display = 'none';
+            document.getElementById('magicStep2').style.display = 'none';
+            document.getElementById('magicStep3').style.display = 'none';
+            document.getElementById('magicLoading').style.display = 'none';
+            
+            // Show requested step
+            if (step === 1) {
+                document.getElementById('magicStep1').style.display = 'block';
+            } else if (step === 2) {
+                document.getElementById('magicStep2').style.display = 'block';
+            } else if (step === 3) {
+                document.getElementById('magicStep3').style.display = 'block';
+            } else if (step === 'loading') {
+                document.getElementById('magicLoading').style.display = 'block';
+            }
+        }
+
+        function handleInitialPromptKeydown(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                getQuestions();
+            }
+        }
+
+        async function getQuestions() {
+            const initialPrompt = document.getElementById('initialPrompt').value.trim();
+            
+            if (!initialPrompt) {
+                showToast('Please enter your initial idea first', 'error');
+                return;
+            }
+
+            if (!currentApiKey) {
+                showToast('Please set your API key first', 'error');
+                openApiKeyModal();
+                return;
+            }
+
+            magicInitialPrompt = initialPrompt;
+            showMagicStep('loading');
+
+            try {
+                const questionsPrompt = `Generate exactly 3 concise questions to improve this image generation idea: "${initialPrompt}"
+
+Focus on key aspects like visual style, setting, mood, lighting, or composition.
+
+Return a JSON array with exactly 3 question strings.`;
+
+                const response = await callMagicAPI(questionsPrompt, true);
+                const parsedResponse = JSON.parse(response.trim());
+                
+                // Handle different possible JSON structures
+                if (Array.isArray(parsedResponse)) {
+                    magicQuestions = parsedResponse;
+                } else if (parsedResponse.questions && Array.isArray(parsedResponse.questions)) {
+                    magicQuestions = parsedResponse.questions;
+                } else {
+                    throw new Error('Invalid JSON structure');
+                }
+                
+                if (magicQuestions.length === 3) {
+                    displayQuestions();
+                    showMagicStep(2);
+                } else {
+                    throw new Error('Invalid questions count');
+                }
+            } catch (error) {
+                console.error('Questions generation error:', error);
+                showToast('Failed to generate questions. Please try again.', 'error');
+                showMagicStep(1);
+            }
+        }
+
+        function displayQuestions() {
+            const questionsList = document.getElementById('questionsList');
+            questionsList.innerHTML = '';
+            
+            magicQuestions.forEach((question, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question-item';
+                questionDiv.innerHTML = `
+                    <div class="question-text">${question}</div>
+                    <input type="text" class="question-input" id="answer${index}" placeholder="Your answer..." onkeydown="handleAnswerKeydown(event, ${index})">
+                `;
+                questionsList.appendChild(questionDiv);
+            });
+        }
+
+        function handleAnswerKeydown(event, questionIndex) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                // Focus next question or generate if last
+                if (questionIndex < magicQuestions.length - 1) {
+                    document.getElementById(`answer${questionIndex + 1}`).focus();
+                } else {
+                    generatePrompt();
+                }
+            }
+        }
+
+        async function generatePrompt() {
+            // Collect answers
+            magicAnswers = [];
+            for (let i = 0; i < magicQuestions.length; i++) {
+                const answer = document.getElementById(`answer${i}`).value.trim();
+                magicAnswers.push(answer);
+            }
+
+            showMagicStep('loading');
+
+            try {
+                let context = `Original idea: "${magicInitialPrompt}"\n\n`;
+                magicQuestions.forEach((question, index) => {
+                    if (magicAnswers[index]) {
+                        context += `Q: ${question}\nA: ${magicAnswers[index]}\n\n`;
+                    }
+                });
+
+                const enhancePrompt = `You are an expert at creating detailed image generation prompts. 
+
+${context}
+
+Create an enhanced, detailed image generation prompt incorporating the original idea and answers. The prompt should be:
+- Specific and vivid with rich visual details
+- Include artistic style, mood, lighting, and composition
+- Be optimized for AI image generation
+- Around 2-3 sentences long
+- Professional and compelling
+
+Respond with ONLY the enhanced prompt text. No quotes, no explanations.`;
+
+                const enhanced = await callMagicAPI(enhancePrompt);
+                
+                document.getElementById('enhancedPromptDisplay').textContent = enhanced.trim();
+                showMagicStep(3);
+                
+            } catch (error) {
+                console.error('Enhanced prompt generation error:', error);
+                showToast('Failed to generate enhanced prompt. Please try again.', 'error');
+                showMagicStep(2);
+            }
+        }
+
+        async function callMagicAPI(prompt, useJsonMode = false) {
+            const generationConfig = useJsonMode ? {
+                thinkingConfig: {
+                    thinkingBudget: 0
+                },
+                responseMimeType: "application/json"
+            } : {
+                responseMimeType: "text/plain"
+            };
+
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${currentApiKey}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    contents: [{
+                        role: "user",
+                        parts: [{
+                            text: prompt
+                        }]
+                    }],
+                    generationConfig
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`API request failed: ${response.status}`);
+            }
+
+            const data = await response.json();
+            
+            if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) {
+                return data.candidates[0].content.parts[0].text;
+            }
+            
+            throw new Error('Invalid API response format');
+        }
+
+        function useEnhancedPrompt() {
+            const enhancedPrompt = document.getElementById('enhancedPromptDisplay').textContent;
+            const chatInput = document.getElementById('chatInput');
+            
+            chatInput.value = enhancedPrompt;
+            closeMagicPromptModal();
+            
+            // Focus on chat input and auto-resize
+            chatInput.focus();
+            chatInput.style.height = 'auto';
+            chatInput.style.height = chatInput.scrollHeight + 'px';
+            
+            showToast('Enhanced prompt loaded! Ready to generate.', 'success');
+        }
+
+        // Gallery Functions - DISABLED (localStorage quota issues, will implement with database)
+        /*
+        function loadGallery() {
+            try {
+                console.log('📂 Starting gallery load...');
+                
+                // Test localStorage access first
+                try {
+                    localStorage.setItem('test', 'test');
+                    localStorage.removeItem('test');
+                    console.log('✅ localStorage is accessible');
+                } catch (testError) {
+                    console.error('❌ localStorage access failed:', testError);
+                    imageGallery = [];
+                    return;
+                }
+                
+                const savedGallery = localStorage.getItem('imageGallery');
+                console.log('📂 Raw localStorage data:', savedGallery ? savedGallery.substring(0, 100) + '...' : 'null');
+                
+                if (savedGallery) {
+                    imageGallery = JSON.parse(savedGallery);
+                    console.log('📂 Successfully loaded gallery items:', imageGallery.length);
+                    imageGallery.forEach((item, index) => {
+                        console.log(`  ${index + 1}. "${item.prompt}" (${new Date(item.timestamp).toLocaleString()})`);
+                    });
+                } else {
+                    imageGallery = [];
+                    console.log('📂 No existing gallery data - initialized empty gallery');
+                }
+            } catch (error) {
+                console.error('💥 Error loading gallery:', error);
+                console.error('💥 Error details:', error.message, error.stack);
+                imageGallery = [];
+            }
+        }
+
+        function saveGallery() {
+            try {
+                console.log('💾 Saving gallery to localStorage, items:', imageGallery.length);
+                
+                // Start with aggressive trimming to prevent quota issues
+                let attempts = 0;
+                const maxAttempts = 5;
+                let itemsToSave = [...imageGallery]; // Copy array
+                
+                while (attempts < maxAttempts) {
+                    attempts++;
+                    
+                    try {
+                        const galleryData = JSON.stringify(itemsToSave);
+                        const sizeInMB = new Blob([galleryData]).size / (1024 * 1024);
+                        console.log(`📊 Attempt ${attempts}: Gallery data size: ${sizeInMB.toFixed(2)} MB with ${itemsToSave.length} items`);
+                        
+                        // Try to save
+                        localStorage.setItem('imageGallery', galleryData);
+                        
+                        // If successful, update the main array and verify
+                        imageGallery = itemsToSave;
+                        console.log('✅ Gallery saved successfully with', imageGallery.length, 'items');
+                        
+                        const verification = localStorage.getItem('imageGallery');
+                        if (verification) {
+                            const parsed = JSON.parse(verification);
+                            console.log('✅ Verification: Gallery has', parsed.length, 'items in localStorage');
+                        }
+                        return; // Success, exit function
+                        
+                    } catch (saveError) {
+                        if (saveError.name === 'QuotaExceededError' || saveError.message.includes('quota')) {
+                            console.log(`💾 Quota exceeded on attempt ${attempts}, reducing items...`);
+                            
+                            // Reduce items more aggressively each attempt
+                            const targetCount = Math.max(1, Math.floor(itemsToSave.length * 0.6)); // Keep 60% each time
+                            itemsToSave = itemsToSave.slice(0, targetCount);
+                            console.log(`🗂️ Reduced to ${itemsToSave.length} items for next attempt`);
+                            
+                            if (itemsToSave.length === 0) {
+                                console.error('💥 Cannot save any items - all too large');
+                                imageGallery = [];
+                                localStorage.removeItem('imageGallery');
+                                return;
+                            }
+                        } else {
+                            throw saveError; // Re-throw non-quota errors
+                        }
+                    }
+                }
+                
+                console.error('💥 Failed to save gallery after', maxAttempts, 'attempts');
+                
+            } catch (error) {
+                console.error('💥 Error saving gallery:', error);
+                console.error('💥 Error details:', error.message);
+            }
+        }
+
+        function addToGallery(imageData, prompt) {
+            console.log('➕ Adding new item to gallery:', prompt);
+            
+            // Pre-emptively limit gallery size to prevent quota issues
+            // Keep only the most recent 3 items to ensure we don't exceed localStorage limits
+            const MAX_GALLERY_ITEMS = 3;
+            
+            if (imageGallery.length >= MAX_GALLERY_ITEMS) {
+                const itemsToRemove = imageGallery.length - MAX_GALLERY_ITEMS + 1;
+                console.log(`🗂️ Gallery at capacity (${imageGallery.length}), removing ${itemsToRemove} oldest items`);
+                imageGallery = imageGallery.slice(0, MAX_GALLERY_ITEMS - 1);
+            }
+            
+            const galleryItem = {
+                id: Date.now() + Math.random(),
+                imageData: imageData,
+                prompt: prompt,
+                timestamp: Date.now()
+            };
+            
+            console.log('📋 Gallery item created:', {
+                id: galleryItem.id,
+                prompt: galleryItem.prompt,
+                imageDataLength: galleryItem.imageData ? galleryItem.imageData.length : 0,
+                timestamp: new Date(galleryItem.timestamp).toLocaleString()
+            });
+            
+            imageGallery.unshift(galleryItem); // Add to beginning
+            console.log('📋 Gallery now has', imageGallery.length, 'items (max:', MAX_GALLERY_ITEMS, ')');
+            
+            saveGallery();
+            updateGalleryButton();
+        }
+
+        function updateGalleryButton() {
+            // Gallery button is now in header with consistent styling
+            // No need to update styles as it maintains consistent appearance
+        }
+
+        function openGalleryModal() {
+            const modal = document.getElementById('galleryModal');
+            modal.style.display = 'block';
+            renderGallery();
+        }
+
+        function closeGalleryModal() {
+            const modal = document.getElementById('galleryModal');
+            modal.style.display = 'none';
+        }
+
+        function renderGallery() {
+            const galleryGrid = document.getElementById('galleryGrid');
+            
+            if (imageGallery.length === 0) {
+                galleryGrid.innerHTML = `
+                    <div class="gallery-empty">
+                        <div class="gallery-empty-icon">🖼️</div>
+                        <div>No images generated yet</div>
+                        <div class="gallery-empty-subtitle">Start creating images to build your gallery</div>
+                    </div>
+                `;
+                return;
+            }
+
+            galleryGrid.innerHTML = imageGallery.map(item => `
+                <div class="gallery-item" onclick="openImageDetail('${item.id}')">
+                    <img class="gallery-item-image" src="${item.imageData}" alt="Generated image">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-prompt">${item.prompt}</div>
+                        <div class="gallery-item-date">${new Date(item.timestamp).toLocaleDateString()}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function openImageDetail(imageId) {
+            const image = imageGallery.find(item => item.id == imageId);
+            if (!image) return;
+
+            currentDetailImageId = imageId;
+            
+            document.getElementById('detailImage').src = image.imageData;
+            document.getElementById('detailPrompt').textContent = image.prompt;
+            document.getElementById('detailTimestamp').textContent = new Date(image.timestamp).toLocaleString();
+            
+            const modal = document.getElementById('imageDetailModal');
+            modal.style.display = 'block';
+        }
+
+        function closeImageDetailModal() {
+            const modal = document.getElementById('imageDetailModal');
+            modal.style.display = 'none';
+            currentDetailImageId = null;
+        }
+
+        function downloadDetailImage() {
+            if (!currentDetailImageId) return;
+            
+            const image = imageGallery.find(item => item.id == currentDetailImageId);
+            if (!image) return;
+
+            const link = document.createElement('a');
+            link.download = `generated-image-${new Date(image.timestamp).toISOString().split('T')[0]}.png`;
+            link.href = image.imageData;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showToast('Image downloaded successfully!', 'success');
+        }
+
+        function deleteDetailImage() {
+            if (!currentDetailImageId) return;
+            
+            if (confirm('Are you sure you want to delete this image?')) {
+                imageGallery = imageGallery.filter(item => item.id != currentDetailImageId);
+                saveGallery();
+                updateGalleryButton();
+                closeImageDetailModal();
+                showToast('Image deleted successfully!', 'success');
+            }
+        }
+
+        function downloadAllImages() {
+            if (imageGallery.length === 0) {
+                showToast('No images to download', 'error');
+                return;
+            }
+
+            imageGallery.forEach((image, index) => {
+                setTimeout(() => {
+                    const link = document.createElement('a');
+                    link.download = `generated-image-${index + 1}-${new Date(image.timestamp).toISOString().split('T')[0]}.png`;
+                    link.href = image.imageData;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }, index * 100); // Small delay between downloads
+            });
+            
+            showToast(`Downloading ${imageGallery.length} images...`, 'success');
+        }
+
+        function clearGallery() {
+            if (imageGallery.length === 0) {
+                showToast('Gallery is already empty', 'error');
+                return;
+            }
+
+            if (confirm(`Are you sure you want to delete all ${imageGallery.length} images from your gallery?`)) {
+                imageGallery = [];
+                saveGallery();
+                updateGalleryButton();
+                renderGallery();
+                showToast('Gallery cleared successfully!', 'success');
+            }
+        }
+        */
+        // End of disabled gallery functions
+    </script>
+</body>
+</html>
